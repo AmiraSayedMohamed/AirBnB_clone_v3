@@ -1,4 +1,4 @@
-#!/usr/bin/python3xx
+#!/usr/bin/python3
 '''API status and statistics endpoints'''
 
 from flask import jsonify
@@ -11,10 +11,12 @@ from models.city import City
 from models.place import Place
 from models.review import Review
 
+
 @app_views.route('/status', strict_slashes=False)
 def get_status():
     '''Return API status'''
     return jsonify(status='OK')
+
 
 @app_views.route('/stats', strict_slashes=False)
 def get_stats():
