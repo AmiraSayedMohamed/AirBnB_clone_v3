@@ -18,6 +18,7 @@ import json
 import os
 import pep8
 import unittest
+
 FileStorage = file_storage.FileStorage
 classes = {"Amenity": Amenity, "BaseModel": BaseModel, "City": City,
            "Place": Place, "Review": Review, "State": State, "User": User}
@@ -70,6 +71,16 @@ test_file_storage.py'])
 
 class TestFileStorage(unittest.TestCase):
     """Test the FileStorage class"""
+    
+    @classmethod
+    def setUpClass(cls):
+        """Set up for the tests"""
+        cls.storage = FileStorage()
+        cls.storage.reload()  # Load existing data from file.json
+        cls.state = State(name="California")
+        cls.state.save()
+        cls.storage.save()  # Save state to ensure it is in file.json
+
     @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
     def test_all_returns_dict(self):
         """Test that all returns the FileStorage.__objects attr"""
@@ -80,7 +91,7 @@ class TestFileStorage(unittest.TestCase):
 
     @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
     def test_new(self):
-        """test that new adds an object to the FileStorage.__objects attr"""
+        """Test that new adds an object to the FileStorage.__objects attr"""
         storage = FileStorage()
         save = FileStorage._FileStorage__objects
         FileStorage._FileStorage__objects = {}
@@ -113,3 +124,23 @@ class TestFileStorage(unittest.TestCase):
         with open("file.json", "r") as f:
             js = f.read()
         self.assertEqual(json.loads(string), json.loads(js))
+
+    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
+    def test_get(self):
+        """Test get method"""
+        state_id = self.state.id
+        state = self.storage.get(State, state_id)
+        self.assertEqual(state.id, state_id)
+        self.assertEqual(state.name, "California")
+
+    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
+    def test_count(self):
+        """Test count method"""
+        count = self.storage.count(State)
+        self.assertGreater(count, 0)
+        all_count = self.storage.count()
+        self.assertGreater(all_count, count)
+
+if __name__ == '__main__':
+    unittest.main()
+

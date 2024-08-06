@@ -18,6 +18,7 @@ import json
 import os
 import pep8
 import unittest
+
 DBStorage = db_storage.DBStorage
 classes = {"Amenity": Amenity, "City": City, "Place": Place,
            "Review": Review, "State": State, "User": User}
@@ -68,21 +69,57 @@ test_db_storage.py'])
                             "{:s} method needs a docstring".format(func[0]))
 
 
-class TestFileStorage(unittest.TestCase):
-    """Test the FileStorage class"""
+class TestDBStorage(unittest.TestCase):
+    """Test the DBStorage class"""
+
+    @classmethod
+    def setUpClass(cls):
+        """Set up for the tests"""
+        cls.storage = DBStorage()
+        cls.storage.reload()
+        cls.state = State(name="California")
+        cls.state.save()
+        cls.storage.save()  # Save state to ensure it is in the database
+
+    def test_get(self):
+        """Test get method"""
+        state_id = self.state.id
+        state = self.storage.get(State, state_id)
+        self.assertEqual(state.id, state_id)
+        self.assertEqual(state.name, "California")
+
+    def test_count(self):
+        """Test count method"""
+        count = self.storage.count(State)
+        self.assertGreater(count, 0)
+        all_count = self.storage.count()
+        self.assertGreater(all_count, count)
+
     @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
     def test_all_returns_dict(self):
-        """Test that all returns a dictionaty"""
-        self.assertIs(type(models.storage.all()), dict)
+        """Test that all returns a dictionary"""
+        self.assertIs(type(self.storage.all()), dict)
 
     @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
     def test_all_no_class(self):
         """Test that all returns all rows when no class is passed"""
+        all_objs = self.storage.all()
+        self.assertIsInstance(all_objs, dict)
 
     @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
     def test_new(self):
-        """test that new adds an object to the database"""
+        """Test that new adds an object to the database"""
+        new_state = State(name="Nevada")
+        self.storage.new(new_state)
+        self.storage.save()
+        self.assertIn(f"State.{new_state.id}", self.storage.all())
 
     @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
     def test_save(self):
-        """Test that save properly saves objects to file.json"""
+        """Test that save properly saves objects to the database"""
+        self.storage.save()
+        self.assertIsNotNone(self.storage.all())
+
+if __name__ == '__main__':
+    unittest.main()
+
